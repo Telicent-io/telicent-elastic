@@ -1,7 +1,5 @@
 package io.telicent.elasticsearch;
 
-import java.io.Reader;
-import java.io.StringReader;
 import java.util.List;
 import java.util.function.Function;
 
@@ -13,7 +11,6 @@ import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.env.Environment;
 import org.elasticsearch.index.IndexSettings;
 import org.elasticsearch.index.analysis.AbstractTokenFilterFactory;
-import org.elasticsearch.index.analysis.Analysis;
 import org.elasticsearch.index.analysis.AnalysisMode;
 import org.elasticsearch.index.analysis.CharFilterFactory;
 import org.elasticsearch.index.analysis.CustomAnalyzer;
@@ -22,20 +19,26 @@ import org.elasticsearch.index.analysis.TokenizerFactory;
 
 public class SynonymGraphTokenFilterFactory extends AbstractTokenFilterFactory {
 
-	private final String format;
 	private final boolean expand;
 	private final boolean lenient;
 	protected final Settings settings;
 	protected final Environment environment;
 	protected final AnalysisMode analysisMode = AnalysisMode.SEARCH_TIME;
+	protected final String indexName;
+	protected final String fieldName;
 
 	SynonymGraphTokenFilterFactory(IndexSettings indexSettings, Environment env, String name, Settings settings) {
 		super(indexSettings, name, settings);
 		this.settings = settings;
 		this.expand = settings.getAsBoolean("expand", true);
 		this.lenient = settings.getAsBoolean("lenient", false);
-		this.format = settings.get("format", "");
 		this.environment = env;
+		this.indexName = settings.get("index");
+		if (this.indexName == null)
+			throw new RuntimeException("index can't be null");
+		this.fieldName = settings.get("field");
+		if (this.fieldName == null)
+			throw new RuntimeException("fieldName can't be null");
 	}
 
 	@Override
@@ -54,7 +57,7 @@ public class SynonymGraphTokenFilterFactory extends AbstractTokenFilterFactory {
 			List<CharFilterFactory> charFilters, List<TokenFilterFactory> previousTokenFilters,
 			Function<String, TokenFilterFactory> allFilters) {
 		final Analyzer analyzer = buildSynonymAnalyzer(tokenizer, charFilters, previousTokenFilters, allFilters);
-		final SynonymMap synonyms = buildSynonyms(analyzer, getRulesFromSettings(environment));
+		final SynonymMap synonyms = buildSynonyms(analyzer);
 		final String name = name();
 		return new TokenFilterFactory() {
 			@Override
@@ -74,16 +77,11 @@ public class SynonymGraphTokenFilterFactory extends AbstractTokenFilterFactory {
 		};
 	}
 
-	SynonymMap buildSynonyms(Analyzer analyzer, Reader rules) {
+	SynonymMap buildSynonyms(Analyzer analyzer) {
 		try {
-			SynonymMap.Builder parser;
-			if ("wordnet".equalsIgnoreCase(format)) {
-				parser = new ESWordnetSynonymParser(true, expand, lenient, analyzer);
-				((ESWordnetSynonymParser) parser).parse(rules);
-			} else {
-				parser = new ESSolrSynonymParser(true, expand, lenient, analyzer);
-				((ESSolrSynonymParser) parser).parse(rules);
-			}
+			IndexedSynonymParser parser = new IndexedSynonymParser(this.indexName, this.fieldName, this.expand, true,
+					this.lenient, analyzer);
+			parser.parse(null);
 			return parser.build();
 		} catch (Exception e) {
 			throw new IllegalArgumentException("failed to build synonyms", e);
@@ -94,24 +92,6 @@ public class SynonymGraphTokenFilterFactory extends AbstractTokenFilterFactory {
 			List<TokenFilterFactory> tokenFilters, Function<String, TokenFilterFactory> allFilters) {
 		return new CustomAnalyzer(tokenizer, charFilters.toArray(new CharFilterFactory[0]),
 				tokenFilters.stream().map(TokenFilterFactory::getSynonymFilter).toArray(TokenFilterFactory[]::new));
-	}
-
-	Reader getRulesFromSettings(Environment env) {
-		Reader rulesReader;
-		if (settings.getAsList("synonyms", null) != null) {
-			List<String> rulesList = Analysis.getWordList(env, settings, "synonyms");
-			StringBuilder sb = new StringBuilder();
-			for (String line : rulesList) {
-				sb.append(line).append(System.lineSeparator());
-			}
-			rulesReader = new StringReader(sb.toString());
-		} else if (settings.get("synonyms_path") != null) {
-			rulesReader = Analysis.getReaderFromFile(env, settings, "synonyms_path");
-		} else {
-			throw new IllegalArgumentException(
-					"synonym requires either `synonyms` or `synonyms_path` to be configured");
-		}
-		return rulesReader;
 	}
 
 }
