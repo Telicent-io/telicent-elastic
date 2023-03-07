@@ -81,7 +81,7 @@ public class SynonymGraphTokenFilterFactory extends AbstractTokenFilterFactory {
 		try {
 			IndexedSynonymParser parser = new IndexedSynonymParser(this.indexName, this.fieldName, this.expand, true,
 					this.lenient, analyzer);
-			parser.parse(null);
+			parser.parse();
 			return parser.build();
 		} catch (Exception e) {
 			throw new IllegalArgumentException("failed to build synonyms", e);

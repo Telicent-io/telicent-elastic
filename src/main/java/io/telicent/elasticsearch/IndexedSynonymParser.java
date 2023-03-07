@@ -1,7 +1,6 @@
 package io.telicent.elasticsearch;
 
 import java.io.IOException;
-import java.io.Reader;
 import java.io.StringReader;
 import java.text.ParseException;
 import java.util.List;
@@ -11,11 +10,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.synonym.SolrSynonymParser;
-import org.apache.lucene.analysis.synonym.SynonymMap;
 import org.apache.lucene.util.CharsRef;
 import org.apache.lucene.util.CharsRefBuilder;
 import org.elasticsearch.client.RestClient;
-import org.elasticsearch.discovery.zen.MasterFaultDetection.ThisIsNotTheMasterYouAreLookingForException;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -35,15 +32,24 @@ public class IndexedSynonymParser extends SolrSynonymParser {
 
 	private final String index;
 	private final String field;
+	private final String host;
+	private final int port;
 
 	private static final Logger logger = LogManager.getLogger(IndexedSynonymParser.class);
 
-	public IndexedSynonymParser(String index, String field, boolean expand, boolean dedup, boolean lenient,
-			Analyzer analyzer) {
+	public IndexedSynonymParser(String host, int port, String index, String field, boolean expand, boolean dedup,
+			boolean lenient, Analyzer analyzer) {
 		super(dedup, expand, analyzer);
 		this.lenient = lenient;
 		this.index = index;
 		this.field = field;
+		this.host = host;
+		this.port = port;
+	}
+
+	public IndexedSynonymParser(String index, String field, boolean expand, boolean dedup, boolean lenient,
+			Analyzer analyzer) {
+		this("localhost", 9200, index, field, expand, dedup, lenient, analyzer);
 	}
 
 	@Override
@@ -79,11 +85,10 @@ public class IndexedSynonymParser extends SolrSynonymParser {
 		}
 	}
 
-	@Override
-	public void parse(Reader in) throws IOException, ParseException {
+	public void parse() throws IOException, ParseException {
 		// create a one-off client
 		// TODO make port configurable etc...
-		final RestClient restClient = RestClient.builder(new HttpHost("localhost", 9200)).build();
+		final RestClient restClient = RestClient.builder(new HttpHost(this.host, this.port)).build();
 
 		// Create the transport with a Jackson mapper
 		final ElasticsearchTransport transport = new RestClientTransport(restClient, new JacksonJsonpMapper());

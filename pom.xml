@@ -10,6 +10,7 @@
 	<properties>
 		<elasticsearch.version>7.17.5</elasticsearch.version>
 		<jdk.version>17</jdk.version>
+		<testcontainer.version>1.17.6</testcontainer.version>
 	</properties>
 	<build>
 		<plugins>
@@ -62,18 +63,10 @@
 		</dependency>
 		<!-- Testing -->
 		<dependency>
-			<groupId>org.elasticsearch.test</groupId>
-			<artifactId>framework</artifactId>
-			<version>${elasticsearch.version}</version>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>elasticsearch</artifactId>
+			<version>${testcontainer.version}</version>
 			<scope>test</scope>
 		</dependency>
-		<!-- 
-		<dependency>
-			<groupId>co.elastic.clients</groupId>
-			<artifactId>elasticsearch-java</artifactId>
-			<version>${elasticsearch.version}</version>
-			<scope>test</scope>
-		</dependency>
-		-->
 	</dependencies>
 </project>
