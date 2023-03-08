@@ -3,15 +3,18 @@ package io.telicent.elasticsearch;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.search.Hit;
-import co.elastic.clients.json.JsonData;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 import co.elastic.clients.transport.ElasticsearchTransport;
 import co.elastic.clients.transport.rest_client.RestClientTransport;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.io.IOException;
 import java.io.StringReader;
 import java.text.ParseException;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map.Entry;
 import org.apache.http.HttpHost;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -27,7 +30,6 @@ public class IndexedSynonymParser extends SolrSynonymParser {
     private final boolean lenient;
 
     private final String index;
-    private final String field;
     private final String host;
     private final int port;
 
@@ -37,7 +39,6 @@ public class IndexedSynonymParser extends SolrSynonymParser {
             String host,
             int port,
             String index,
-            String field,
             boolean expand,
             boolean dedup,
             boolean lenient,
@@ -45,7 +46,6 @@ public class IndexedSynonymParser extends SolrSynonymParser {
         super(dedup, expand, analyzer);
         this.lenient = lenient;
         this.index = index;
-        this.field = field;
         this.host = host;
         this.port = port;
     }
@@ -100,20 +100,27 @@ public class IndexedSynonymParser extends SolrSynonymParser {
         // assuming there are only a handful of documents
         SearchResponse<ObjectNode> response = client.search(s -> s.index(index), ObjectNode.class);
 
+        int synonymsLoaded = 0;
+
         List<Hit<ObjectNode>> hits = response.hits().hits();
         for (Hit<ObjectNode> hit : hits) {
-            String fieldValue = null;
-            JsonData data = hit.fields().get(this.field);
-            if (data == null) {
-                fieldValue = hit.source().get(field).asText();
-            } else {
-                fieldValue = data.toString();
+            Iterator<Entry<String, JsonNode>> fieldsIter = hit.source().fields();
+            while (fieldsIter.hasNext()) {
+                Entry<String, JsonNode> node = fieldsIter.next();
+                if (node.getValue().isArray()) {
+                    Iterator<JsonNode> iter = ((ArrayNode) node.getValue()).iterator();
+                    while (iter.hasNext()) {
+                        super.parse(new StringReader(iter.next().asText()));
+                        synonymsLoaded++;
+                    }
+                } else {
+                    super.parse(new StringReader(node.getValue().asText()));
+                    synonymsLoaded++;
+                }
             }
-            if (fieldValue == null) continue;
-
-            // populate the map
-            super.parse(new StringReader(fieldValue));
         }
+
+        logger.info("{} synonyms loaded from index {}", synonymsLoaded, index);
 
         // close the index
         client.shutdown();

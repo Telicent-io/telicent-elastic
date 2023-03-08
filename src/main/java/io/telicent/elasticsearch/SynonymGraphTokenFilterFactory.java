@@ -27,7 +27,6 @@ public class SynonymGraphTokenFilterFactory extends AbstractTokenFilterFactory {
     protected final Settings settings;
     protected final Environment environment;
     protected final String indexName;
-    protected final String fieldName;
     protected final int port;
     protected final String host;
 
@@ -38,10 +37,7 @@ public class SynonymGraphTokenFilterFactory extends AbstractTokenFilterFactory {
         this.expand = settings.getAsBoolean("expand", true);
         this.lenient = settings.getAsBoolean("lenient", false);
         this.environment = env;
-        this.indexName = settings.get("index");
-        if (this.indexName == null) throw new RuntimeException("Parameter 'index' can't be null");
-        this.fieldName = settings.get("field");
-        if (this.fieldName == null) throw new RuntimeException("Parameter 'field' can't be null");
+        this.indexName = settings.get("index", ".synonyms");
         this.port = env.settings().getAsInt("http.port", 9200);
         this.host = env.settings().get("network.host", "localhost");
     }
@@ -91,14 +87,7 @@ public class SynonymGraphTokenFilterFactory extends AbstractTokenFilterFactory {
         try {
             IndexedSynonymParser parser =
                     new IndexedSynonymParser(
-                            host,
-                            port,
-                            this.indexName,
-                            this.fieldName,
-                            this.expand,
-                            true,
-                            this.lenient,
-                            analyzer);
+                            host, port, this.indexName, this.expand, true, this.lenient, analyzer);
             parser.parse();
             return parser.build();
         } catch (Exception e) {

@@ -31,7 +31,7 @@ public class IndexedSynonymParserTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(IndexedSynonymParserTest.class);
 
-    private static final String INDEXNAME = "synonyms";
+    private static final String INDEXNAME = ".synonyms";
 
     @Before
     public void setup() throws ElasticsearchException, IOException {
@@ -63,6 +63,11 @@ public class IndexedSynonymParserTest {
         // And create the API client
         ElasticsearchClient client = new ElasticsearchClient(transport);
 
+        // Explicit mapping
+        InputStream mapstream =
+                getClass().getClassLoader().getResourceAsStream("synonyms-mappings.json");
+        client.indices().create(t -> t.index(INDEXNAME).withJson(mapstream));
+
         InputStream input = getClass().getClassLoader().getResourceAsStream("synonyms.json");
 
         IndexRequest<JsonData> request = IndexRequest.of(i -> i.index(INDEXNAME).withJson(input));
@@ -80,14 +85,12 @@ public class IndexedSynonymParserTest {
 
     @Test
     public void loadSynonyms() throws IOException, ParseException {
-        String fieldName = "synonyms";
         final StandardAnalyzer standardAnalyzer = new StandardAnalyzer();
         IndexedSynonymParser parser =
                 new IndexedSynonymParser(
                         container.getHost(),
                         container.getFirstMappedPort().intValue(),
                         INDEXNAME,
-                        fieldName,
                         true,
                         true,
                         true,
