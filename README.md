@@ -2,6 +2,9 @@
 
 Plugin for Elasticsearch 
 
-https://www.elastic.co/guide/en/elasticsearch/plugins/7.17/plugin-authors.html
+Format the code with 
 
+```
+mvn git-code-format:format-code -Dgcf.globPattern=**/*
+```
 
