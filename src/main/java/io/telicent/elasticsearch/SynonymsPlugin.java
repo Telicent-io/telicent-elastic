@@ -24,6 +24,6 @@ public class SynonymsPlugin extends Plugin implements AnalysisPlugin, Reloadable
 
     @Override
     public void reload(Settings settings) throws Exception {
-        // TODO Auto-generated method stub
+        // nothing special required it seems
     }
 }

@@ -22,6 +22,7 @@ import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.synonym.SolrSynonymParser;
 import org.apache.lucene.util.CharsRef;
 import org.apache.lucene.util.CharsRefBuilder;
+import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.client.RestClient;
 
 /** Generates a synonym map from the content of an index * */
@@ -96,33 +97,47 @@ public class IndexedSynonymParser extends SolrSynonymParser {
         // And create the API client
         final ElasticsearchClient client = new ElasticsearchClient(transport);
 
-        // get all the documents from the index
-        // assuming there are only a handful of documents
-        SearchResponse<ObjectNode> response = client.search(s -> s.index(index), ObjectNode.class);
-
-        int synonymsLoaded = 0;
-
-        List<Hit<ObjectNode>> hits = response.hits().hits();
-        for (Hit<ObjectNode> hit : hits) {
-            Iterator<Entry<String, JsonNode>> fieldsIter = hit.source().fields();
-            while (fieldsIter.hasNext()) {
-                Entry<String, JsonNode> node = fieldsIter.next();
-                if (node.getValue().isArray()) {
-                    Iterator<JsonNode> iter = ((ArrayNode) node.getValue()).iterator();
-                    while (iter.hasNext()) {
-                        super.parse(new StringReader(iter.next().asText()));
-                        synonymsLoaded++;
-                    }
-                } else {
-                    super.parse(new StringReader(node.getValue().asText()));
-                    synonymsLoaded++;
-                }
-            }
+        final boolean indexExists = client.indices().exists(e -> e.index(index)).value();
+        if (!indexExists) {
+            // just leave a message to indicate that the index does not exist
+            // but don't crash everything just for that
+            logger.error("Could not find index for synonyms {}", index);
+            return;
         }
 
-        logger.info("{} synonyms loaded from index {}", synonymsLoaded, index);
+        // get all the documents from the index
+        // assuming there are only a handful of documents
+        try {
+            int synonymsLoaded = 0;
 
-        // close the index
-        client.shutdown();
+            SearchResponse<ObjectNode> response =
+                    client.search(s -> s.index(index), ObjectNode.class);
+
+            List<Hit<ObjectNode>> hits = response.hits().hits();
+            for (Hit<ObjectNode> hit : hits) {
+                // get the data from the source field
+                Iterator<Entry<String, JsonNode>> fieldsIter = hit.source().fields();
+                while (fieldsIter.hasNext()) {
+                    Entry<String, JsonNode> node = fieldsIter.next();
+                    if (node.getValue().isArray()) {
+                        Iterator<JsonNode> iter = ((ArrayNode) node.getValue()).iterator();
+                        while (iter.hasNext()) {
+                            super.parse(new StringReader(iter.next().asText()));
+                            synonymsLoaded++;
+                        }
+                    } else {
+                        super.parse(new StringReader(node.getValue().asText()));
+                        synonymsLoaded++;
+                    }
+                }
+            }
+
+            logger.info("{} synonyms loaded from index {}", synonymsLoaded, index);
+
+        } catch (ElasticsearchException e) {
+            logger.error("Exception caught when loading the synonyms from {}", index);
+        } finally { // close the index
+            client.shutdown();
+        }
     }
 }
