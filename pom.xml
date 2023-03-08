@@ -11,6 +11,8 @@
 		<elasticsearch.version>7.17.5</elasticsearch.version>
 		<jdk.version>17</jdk.version>
 		<testcontainer.version>1.17.6</testcontainer.version>
+		<jackson.core.version>2.10.4</jackson.core.version>
+		<jackson.databind.version>2.10.4</jackson.databind.version>
 	</properties>
 	<build>
 		<plugins>
@@ -21,6 +23,24 @@
 					<source>${jdk.version}</source>
 					<target>${jdk.version}</target>
 				</configuration>
+			</plugin>
+			<!-- Copy project dependencies -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>copy-dependencies</id>
+						<phase>process-resources</phase>
+						<goals>
+							<goal>copy-dependencies</goal>
+						</goals>
+						<configuration>
+							<includeScope>runtime</includeScope>
+							<outputDirectory>${project.build.directory}/lib</outputDirectory>
+						</configuration>
+					</execution>
+				</executions>
 			</plugin>
 			<!-- Assemble the package for the distributable software. -->
 			<plugin>
@@ -46,6 +66,18 @@
 	</build>
 	<dependencies>
 		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-core</artifactId>
+			<version>${jackson.core.version}</version>
+			<scope>provided</scope> <!-- Provided by Elasticsearch -->
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+			<version>${jackson.databind.version}</version>
+			<scope>compile</scope> <!-- Not provided by Elasticsearch -->
+		</dependency>
+		<dependency>
 			<groupId>org.elasticsearch</groupId>
 			<artifactId>elasticsearch</artifactId>
 			<version>${elasticsearch.version}</version>
@@ -55,11 +87,6 @@
 			<groupId>co.elastic.clients</groupId>
 			<artifactId>elasticsearch-java</artifactId>
 			<version>${elasticsearch.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>com.fasterxml.jackson.core</groupId>
-			<artifactId>jackson-databind</artifactId>
-			<version>2.12.3</version>
 		</dependency>
 		<!-- Testing -->
 		<dependency>
