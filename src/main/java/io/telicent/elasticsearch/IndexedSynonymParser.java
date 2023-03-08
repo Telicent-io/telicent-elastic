@@ -47,11 +47,6 @@ public class IndexedSynonymParser extends SolrSynonymParser {
 		this.port = port;
 	}
 
-	public IndexedSynonymParser(String index, String field, boolean expand, boolean dedup, boolean lenient,
-			Analyzer analyzer) {
-		this("localhost", 9200, index, field, expand, dedup, lenient, analyzer);
-	}
-
 	@Override
 	public void add(CharsRef input, CharsRef output, boolean includeOrig) {
 		// This condition follows up on the overridden analyze method. In case lenient

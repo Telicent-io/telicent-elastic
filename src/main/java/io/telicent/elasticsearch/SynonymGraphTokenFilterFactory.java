@@ -17,15 +17,21 @@ import org.elasticsearch.index.analysis.CustomAnalyzer;
 import org.elasticsearch.index.analysis.TokenFilterFactory;
 import org.elasticsearch.index.analysis.TokenizerFactory;
 
+/**
+ * Alternative implementation of the SynonymGraphTokenFilter which loads its
+ * dictionary from an Elasticsearch index instead of a file. Used at search time
+ * only and not during indexing.
+ **/
 public class SynonymGraphTokenFilterFactory extends AbstractTokenFilterFactory {
 
 	private final boolean expand;
 	private final boolean lenient;
 	protected final Settings settings;
 	protected final Environment environment;
-	protected final AnalysisMode analysisMode = AnalysisMode.SEARCH_TIME;
 	protected final String indexName;
 	protected final String fieldName;
+	protected final int port;
+	protected final String host;
 
 	SynonymGraphTokenFilterFactory(IndexSettings indexSettings, Environment env, String name, Settings settings) {
 		super(indexSettings, name, settings);
@@ -35,15 +41,17 @@ public class SynonymGraphTokenFilterFactory extends AbstractTokenFilterFactory {
 		this.environment = env;
 		this.indexName = settings.get("index");
 		if (this.indexName == null)
-			throw new RuntimeException("index can't be null");
+			throw new RuntimeException("Parameter 'index' can't be null");
 		this.fieldName = settings.get("field");
 		if (this.fieldName == null)
-			throw new RuntimeException("fieldName can't be null");
+			throw new RuntimeException("Parameter 'field' can't be null");
+		this.port = env.settings().getAsInt("http.port", 9200);
+		this.host = env.settings().get("network.host", "localhost");
 	}
 
 	@Override
 	public AnalysisMode getAnalysisMode() {
-		return this.analysisMode;
+		return AnalysisMode.SEARCH_TIME;
 	}
 
 	@Override
@@ -72,15 +80,15 @@ public class SynonymGraphTokenFilterFactory extends AbstractTokenFilterFactory {
 
 			@Override
 			public AnalysisMode getAnalysisMode() {
-				return analysisMode;
+				return AnalysisMode.SEARCH_TIME;
 			}
 		};
 	}
 
 	SynonymMap buildSynonyms(Analyzer analyzer) {
 		try {
-			IndexedSynonymParser parser = new IndexedSynonymParser(this.indexName, this.fieldName, this.expand, true,
-					this.lenient, analyzer);
+			IndexedSynonymParser parser = new IndexedSynonymParser(host, port, this.indexName, this.fieldName,
+					this.expand, true, this.lenient, analyzer);
 			parser.parse();
 			return parser.build();
 		} catch (Exception e) {
