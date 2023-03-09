@@ -6,6 +6,12 @@ This plugin provides an alternative implementation of the [SynonymGraphTokenFilt
 
 Instead of storing the synonyms in a file, this implementation loads it from an Elasticsearch index, which makes it easier to update especially when Elasticsearch runs in a sandboxed environment.
 
+A Docker compose file in _src/test/resources_ helps create instances of Elasticsearch and Kibana with the plugin pre-installed. It relies on an environment variable _BUILD_DIRECTORY_ e.g. 
+
+```
+export BUILD_DIRECTORY=./target
+```
+
 ### Issues/Questions
 
 Please file an [issue](https://github.com/Telicent-io/telicent-elastic/issues "issue").
@@ -17,7 +23,7 @@ Compile the code with `mvn clean package`, you should find the plugin in _target
 You can then install it in Elasticsearch with
 
 ```
-$ES_HOME/bin/elasticsearch-plugin install file://target/releases/SynonymsPlugin-1.0.0.zip
+$ES_HOME/bin/elasticsearch-plugin install file://target/releases/SynonymsPlugin-$ESVERSION.zip
 ```
 ## Getting Started
 
