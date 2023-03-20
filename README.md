@@ -25,6 +25,13 @@ You can then install it in Elasticsearch with
 ```
 $ES_HOME/bin/elasticsearch-plugin install file://target/releases/SynonymsPlugin-$ESVERSION.zip
 ```
+
+When installing the plugin, you will see a message similar to this one:
+
+![Elastic installation message](https://user-images.githubusercontent.com/2104864/226297257-390d224a-dd1b-463a-a553-b77414315625.png)
+
+This is because the plugin code needs to query Elasticsearch and requires special permissions to do so. 
+
 ## Getting Started
 
 First, you need to declare the analyzers when creating your index (assuming Elasticsearch is running locally on the default port):
