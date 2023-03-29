@@ -44,7 +44,7 @@ public class SynonymGraphTokenFilterFactory extends AbstractTokenFilterFactory {
 
     SynonymGraphTokenFilterFactory(
             IndexSettings indexSettings, Environment env, String name, Settings settings) {
-        super(indexSettings, name, settings);
+        super(name, settings);
 
         this.expand = settings.getAsBoolean("expand", true);
         this.lenient = settings.getAsBoolean("lenient", false);

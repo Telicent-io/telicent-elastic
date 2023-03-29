@@ -1,13 +1,13 @@
 version: '3.7'
 services:
   es01:
-    image: "docker.elastic.co/elasticsearch/elasticsearch:7.17.5"
+    image: "docker.elastic.co/elasticsearch/elasticsearch:8.6.2"
     container_name: elastic
     user: elasticsearch
     command:
       - /bin/bash
       - -c
-      - "elasticsearch-plugin install --batch file:///releases/SynonymsPlugin-7.17.5.0.zip && elasticsearch"
+      - "elasticsearch-plugin install --batch file:///releases/SynonymsPlugin-8.6.2.0.zip && elasticsearch"
     environment:
       - node.name=elastic
       - discovery.type=single-node
@@ -29,7 +29,7 @@ services:
   kibana:
    networks:
       - elastic
-   image: docker.elastic.co/kibana/kibana:7.17.5
+   image: docker.elastic.co/kibana/kibana:8.6.2
    container_name: kibana
    environment:
      ELASTICSEARCH_URL: http://elastic:9200

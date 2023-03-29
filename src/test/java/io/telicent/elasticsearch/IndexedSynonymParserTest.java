@@ -24,6 +24,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.text.ParseException;
 import org.apache.http.HttpHost;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CredentialsProvider;
+import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.analysis.synonym.SynonymMap;
 import org.elasticsearch.client.RestClient;
@@ -36,6 +40,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
 
+/**
+ * With help from
+ * https://spinscale.de/posts/2022-02-17-running-elasticsearch-8-with-testcontainers.html
+ */
 public class IndexedSynonymParserTest {
 
     @Rule public Timeout globalTimeout = Timeout.seconds(120);
@@ -46,17 +54,22 @@ public class IndexedSynonymParserTest {
 
     private static final String INDEXNAME = ".synonyms";
 
+    /** Elasticsearch default username, when secured */
+    private static final String ELASTICSEARCH_USERNAME = "elastic";
+
     @Before
     public void setup() throws ElasticsearchException, IOException {
 
         String version = System.getProperty("elasticsearch-version");
-        if (version == null) version = "7.17.5";
+        if (version == null) version = "8.6.2";
+
         LOG.info("Starting docker instance of Elasticsearch {}...", version);
 
         container =
                 new ElasticsearchContainer(
                         "docker.elastic.co/elasticsearch/elasticsearch:" + version);
         container.start();
+
         LOG.info("Elasticsearch container started at {}", container.getHttpHostAddress());
 
         indexSynonyms();
@@ -64,9 +77,23 @@ public class IndexedSynonymParserTest {
 
     private void indexSynonyms() throws ElasticsearchException, IOException {
 
+        final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+        credentialsProvider.setCredentials(
+                AuthScope.ANY,
+                new UsernamePasswordCredentials(
+                        ELASTICSEARCH_USERNAME,
+                        ElasticsearchContainer.ELASTICSEARCH_DEFAULT_PASSWORD));
+
         RestClient restClient =
-                RestClient.builder(
-                                new HttpHost(container.getHost(), container.getFirstMappedPort()))
+                RestClient.builder(HttpHost.create("https://" + container.getHttpHostAddress()))
+                        .setHttpClientConfigCallback(
+                                httpClientBuilder -> {
+                                    httpClientBuilder.setDefaultCredentialsProvider(
+                                            credentialsProvider);
+                                    httpClientBuilder.setSSLContext(
+                                            container.createSslContextFromCa());
+                                    return httpClientBuilder;
+                                })
                         .build();
 
         // Create the transport with a Jackson mapper
