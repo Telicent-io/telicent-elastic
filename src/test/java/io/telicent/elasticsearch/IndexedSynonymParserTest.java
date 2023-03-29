@@ -24,10 +24,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.text.ParseException;
 import org.apache.http.HttpHost;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.CredentialsProvider;
-import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.analysis.synonym.SynonymMap;
 import org.elasticsearch.client.RestClient;
@@ -54,9 +50,6 @@ public class IndexedSynonymParserTest {
 
     private static final String INDEXNAME = ".synonyms";
 
-    /** Elasticsearch default username, when secured */
-    private static final String ELASTICSEARCH_USERNAME = "elastic";
-
     @Before
     public void setup() throws ElasticsearchException, IOException {
 
@@ -68,6 +61,9 @@ public class IndexedSynonymParserTest {
         container =
                 new ElasticsearchContainer(
                         "docker.elastic.co/elasticsearch/elasticsearch:" + version);
+        // disable the security
+        container.withEnv("xpack.security.enabled", "false");
+
         container.start();
 
         LOG.info("Elasticsearch container started at {}", container.getHttpHostAddress());
@@ -77,23 +73,9 @@ public class IndexedSynonymParserTest {
 
     private void indexSynonyms() throws ElasticsearchException, IOException {
 
-        final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
-        credentialsProvider.setCredentials(
-                AuthScope.ANY,
-                new UsernamePasswordCredentials(
-                        ELASTICSEARCH_USERNAME,
-                        ElasticsearchContainer.ELASTICSEARCH_DEFAULT_PASSWORD));
-
         RestClient restClient =
-                RestClient.builder(HttpHost.create("https://" + container.getHttpHostAddress()))
-                        .setHttpClientConfigCallback(
-                                httpClientBuilder -> {
-                                    httpClientBuilder.setDefaultCredentialsProvider(
-                                            credentialsProvider);
-                                    httpClientBuilder.setSSLContext(
-                                            container.createSslContextFromCa());
-                                    return httpClientBuilder;
-                                })
+                RestClient.builder(
+                                new HttpHost(container.getHost(), container.getFirstMappedPort()))
                         .build();
 
         // Create the transport with a Jackson mapper

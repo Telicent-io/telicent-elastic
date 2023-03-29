@@ -82,7 +82,8 @@ The next step is to declare the index used to store the synonyms and populate it
 curl -XPUT "http://localhost:9200/.synonyms"
 
 
-curl -XPOST -H "Content-Type: application/json" "http://localhost:9200/.synonyms/_doc/synonyms" -d '{
+curl -XPUT -H "Content-Type: application/json" "http://localhost:9200/.synonyms/_doc/synonyms" -d '
+{
   "synonyms": [
     "i-pod, i pod => ipod",
     "sea biscuit, sea biscit => seabiscuit",
