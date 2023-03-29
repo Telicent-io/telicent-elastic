@@ -6,6 +6,8 @@ This plugin provides an alternative implementation of the [SynonymGraphTokenFilt
 
 Instead of storing the synonyms in a file, this implementation loads it from an Elasticsearch index, which makes it easier to update especially when Elasticsearch runs in a sandboxed environment.
 
+The main branch of this repository is for Elasticsearch 7.x, a separate branch is for 8.x.
+
 A Docker compose file in _src/test/resources_ helps create instances of Elasticsearch and Kibana with the plugin pre-installed. It relies on an environment variable _BUILD_DIRECTORY_ e.g. 
 
 ```
