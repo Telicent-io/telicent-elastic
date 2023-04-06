@@ -37,7 +37,7 @@ import org.slf4j.LoggerFactory;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
 
 /**
- * With help from
+ * Test class for IndexedSynonymParser With help from
  * https://spinscale.de/posts/2022-02-17-running-elasticsearch-8-with-testcontainers.html
  */
 public class IndexedSynonymParserTest {

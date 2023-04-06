@@ -24,6 +24,7 @@ import org.elasticsearch.plugins.AnalysisPlugin;
 import org.elasticsearch.plugins.Plugin;
 import org.elasticsearch.plugins.ReloadablePlugin;
 
+/** Main class for Telicent Synonym Plugin * */
 public class SynonymsPlugin extends Plugin implements AnalysisPlugin, ReloadablePlugin {
 
     @Override
