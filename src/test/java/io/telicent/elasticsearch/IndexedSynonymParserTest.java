@@ -36,6 +36,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
 
+/** Test class for IndexedSynonymParser * */
 public class IndexedSynonymParserTest {
 
     @Rule public Timeout globalTimeout = Timeout.seconds(120);
