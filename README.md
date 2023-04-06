@@ -14,7 +14,7 @@ A Docker compose file in _src/test/resources_ helps create instances of Elastics
 export BUILD_DIRECTORY=./target
 ```
 
-This project is licensed under ASF licence v2, see [LICENSE](LICENSE). All contributions are welcome and should be under ASF licence v2, see [CONTRIBUTING](CONTRIBUTING.md) on how to proceed. 
+This project is licensed under ASF license v2, see [LICENSE](LICENSE). All contributions are welcome and should be under ASF license v2, see [CONTRIBUTING](CONTRIBUTING.md) on how to proceed. 
 
 ### Issues/Questions
 
