@@ -114,6 +114,7 @@ public class IndexedSynonymParser extends SolrSynonymParser {
             // just leave a message to indicate that the index does not exist
             // but don't crash everything just for that
             logger.error("Could not find index for synonyms {}", index);
+            client.shutdown();
             return;
         }
 
@@ -148,7 +149,7 @@ public class IndexedSynonymParser extends SolrSynonymParser {
 
         } catch (ElasticsearchException e) {
             logger.error("Exception caught when loading the synonyms from {}", index);
-        } finally { // close the index
+        } finally {
             client.shutdown();
         }
     }

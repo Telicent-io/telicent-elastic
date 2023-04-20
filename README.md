@@ -11,7 +11,7 @@ The main branch of this repository is for Elasticsearch 7.x, a separate branch i
 A Docker compose file in _src/test/resources_ helps create instances of Elasticsearch and Kibana with the plugin pre-installed. It relies on an environment variable _BUILD_DIRECTORY_ e.g. 
 
 ```
-export BUILD_DIRECTORY=./target
+export BUILD_DIRECTORY=$PWD/target
 ```
 
 This project is licensed under ASF licence v2, see [LICENSE](LICENSE). All contributions are welcome and should be under ASF licence v2, see [CONTRIBUTING](CONTRIBUTING.md) on how to proceed. 
@@ -38,7 +38,7 @@ This is because the plugin code needs to query Elasticsearch and requires specia
 
 ## Getting Started
 
-First, you need to declare the analyzers when creating your index (assuming Elasticsearch is running locally on the default port):
+First, you need to declare the analyzers when creating your index (assuming Elasticsearch is running locally on the default port and that the security is deactivated):
 
 ```
 curl -XPUT "http://localhost:9200/my_index" -H 'Content-Type: application/json' -d'
@@ -105,14 +105,14 @@ The synonyms can be stored in any number of documents in the index, a query load
 
 ## Testing
 
-Now that the synonym index has been populated, you can check that it is being applied. First, since the index has been created *after* declaring it in the index, it must be reloaded with 
+Now that the synonym index has been populated, you can check that it is being applied. First, since the synonym data have been created *after* configuring the analysis for the search, the config must be reloaded with 
 
-`curl -XPOST  "http://localhost:9200/search/_reload_search_analyzers"`
+`curl -XPOST  "http://localhost:9200/my_index/_reload_search_analyzers"`
 
-you can then use the analyze endpoint to get a description of how a field will be analysed at search time, for instance
+You can then use the analyze endpoint to get a description of how a field will be analysed at search time, for instance
 
 ```
-curl -XPOST "http://elastic:9200/search/_analyze" -H 'Content-Type: application/json' -d'
+curl -XPOST "http://localhost:9200/my_index/_analyze" -H 'Content-Type: application/json' -d'
 { 
   "analyzer": "default_search", 
   "text": "Is this universe déja vu?"
