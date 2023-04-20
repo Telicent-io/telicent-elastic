@@ -22,7 +22,7 @@ services:
     volumes:
       - ${BUILD_DIRECTORY}/releases/:/releases
     ports:
-      - 9400:9400
+      - 9200:9200
     networks:
       - elastic
 
