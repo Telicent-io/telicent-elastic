@@ -15,6 +15,7 @@ package io.telicent.elasticsearch;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.ElasticsearchException;
+import co.elastic.clients.elasticsearch._types.Refresh;
 import co.elastic.clients.elasticsearch.core.IndexRequest;
 import co.elastic.clients.json.JsonData;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
@@ -28,6 +29,7 @@ import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.analysis.synonym.SynonymMap;
 import org.elasticsearch.client.RestClient;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -92,7 +94,8 @@ public class IndexedSynonymParserTest {
 
         InputStream input = getClass().getClassLoader().getResourceAsStream("synonyms.json");
 
-        IndexRequest<JsonData> request = IndexRequest.of(i -> i.index(INDEXNAME).withJson(input));
+        IndexRequest<JsonData> request =
+                IndexRequest.of(i -> i.index(INDEXNAME).withJson(input).refresh(Refresh.True));
 
         client.index(request);
 
@@ -106,6 +109,9 @@ public class IndexedSynonymParserTest {
     }
 
     @Test
+    /**
+     * Checks that the number of entries is correct in the synonym map when loading from an index
+     */
     public void loadSynonyms() throws IOException, ParseException {
         final StandardAnalyzer standardAnalyzer = new StandardAnalyzer();
         IndexedSynonymParser parser =
@@ -119,5 +125,6 @@ public class IndexedSynonymParserTest {
                         standardAnalyzer);
         parser.parse();
         SynonymMap synonyms = parser.build();
+        Assert.assertEquals(7, synonyms.words.size());
     }
 }
