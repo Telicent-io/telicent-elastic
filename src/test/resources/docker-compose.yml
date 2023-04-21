@@ -7,14 +7,13 @@ services:
     command:
       - /bin/bash
       - -c
-      - "elasticsearch-plugin install --batch file:///releases/SynonymsPlugin-7.17.5.0.zip && elasticsearch"
+      - "elasticsearch-plugin install --batch file:///releases/SynonymsPlugin-7.17.5.1.zip && elasticsearch"
     environment:
-      - node.name=elastic
       - discovery.type=single-node
       - bootstrap.memory_lock=true
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m -ea"
-      - xpack.security.enabled=false
-      - action.destructive_requires_name=false
+      - xpack.security.enabled=true
+      - ELASTIC_PASSWORD=$ELASTIC_PASSWORD
     ulimits:
       memlock:
         soft: -1
@@ -34,6 +33,8 @@ services:
    environment:
      ELASTICSEARCH_URL: http://elastic:9200
      ELASTICSEARCH_HOSTS: http://elastic:9200
+     ELASTICSEARCH_USERNAME: elastic
+     ELASTICSEARCH_PASSWORD: $ELASTIC_PASSWORD
    depends_on:
      - es01
    ports:

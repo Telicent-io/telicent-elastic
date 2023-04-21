@@ -35,8 +35,12 @@ import org.elasticsearch.index.analysis.TokenizerFactory;
  */
 public class SynonymGraphTokenFilterFactory extends AbstractTokenFilterFactory {
 
+    public static final String DEFAULT_USERNAME = "elastic";
+
     private final boolean expand;
     private final boolean lenient;
+    private final String username;
+    private final String password;
 
     protected final String indexName;
     protected final int port;
@@ -49,6 +53,15 @@ public class SynonymGraphTokenFilterFactory extends AbstractTokenFilterFactory {
         this.expand = settings.getAsBoolean("expand", true);
         this.lenient = settings.getAsBoolean("lenient", false);
         this.indexName = settings.get("index", ".synonyms");
+
+        String val = settings.get("username");
+        if (val == null || val.isBlank()) {
+            this.username = DEFAULT_USERNAME;
+        } else {
+            this.username = val;
+        }
+
+        this.password = settings.get("password");
 
         this.port = env.settings().getAsInt("http.port", 9200);
         this.host = env.settings().get("network.host", "localhost");
@@ -99,7 +112,15 @@ public class SynonymGraphTokenFilterFactory extends AbstractTokenFilterFactory {
         try {
             IndexedSynonymParser parser =
                     new IndexedSynonymParser(
-                            host, port, this.indexName, this.expand, true, this.lenient, analyzer);
+                            host,
+                            port,
+                            this.username,
+                            this.password,
+                            this.indexName,
+                            this.expand,
+                            true,
+                            this.lenient,
+                            analyzer);
             parser.parse();
             return parser.build();
         } catch (Exception e) {

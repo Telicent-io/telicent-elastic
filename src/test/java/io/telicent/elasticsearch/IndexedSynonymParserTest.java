@@ -23,14 +23,17 @@ import co.elastic.clients.transport.ElasticsearchTransport;
 import co.elastic.clients.transport.rest_client.RestClientTransport;
 import java.io.IOException;
 import java.io.InputStream;
-import java.text.ParseException;
 import org.apache.http.HttpHost;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.analysis.synonym.SynonymMap;
 import org.elasticsearch.client.RestClient;
-import org.junit.After;
+import org.elasticsearch.client.RestClientBuilder;
+import org.elasticsearch.client.RestClientBuilder.HttpClientConfigCallback;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
@@ -49,8 +52,10 @@ public class IndexedSynonymParserTest {
 
     private static final String INDEXNAME = ".synonyms";
 
-    @Before
-    public void setup() throws ElasticsearchException, IOException {
+    private static final String PASSWORD = "THISISAPASSWORD";
+    private static final String USERNAME = "elastic";
+
+    private void setup(boolean authenticate) throws ElasticsearchException, IOException {
 
         String version = System.getProperty("elasticsearch-version");
         if (version == null) version = "7.17.5";
@@ -59,22 +64,38 @@ public class IndexedSynonymParserTest {
         container =
                 new ElasticsearchContainer(
                         "docker.elastic.co/elasticsearch/elasticsearch:" + version);
+        if (authenticate) {
+            container.withPassword(PASSWORD);
+        }
         container.start();
+
         LOG.info("Elasticsearch container started at {}", container.getHttpHostAddress());
 
-        indexSynonyms();
+        indexSynonyms(authenticate);
     }
 
-    private void indexSynonyms() throws ElasticsearchException, IOException {
-
-        RestClient restClient =
+    private void indexSynonyms(boolean authenticate) throws ElasticsearchException, IOException {
+        RestClientBuilder builder =
                 RestClient.builder(
-                                new HttpHost(container.getHost(), container.getFirstMappedPort()))
-                        .build();
+                        new HttpHost(container.getHost(), container.getFirstMappedPort()));
+
+        if (authenticate) {
+            BasicCredentialsProvider credsProv = new BasicCredentialsProvider();
+            credsProv.setCredentials(
+                    AuthScope.ANY, new UsernamePasswordCredentials(USERNAME, PASSWORD));
+            builder.setHttpClientConfigCallback(
+                    new HttpClientConfigCallback() {
+                        @Override
+                        public HttpAsyncClientBuilder customizeHttpClient(
+                                HttpAsyncClientBuilder httpClientBuilder) {
+                            return httpClientBuilder.setDefaultCredentialsProvider(credsProv);
+                        }
+                    });
+        }
 
         // Create the transport with a Jackson mapper
         ElasticsearchTransport transport =
-                new RestClientTransport(restClient, new JacksonJsonpMapper());
+                new RestClientTransport(builder.build(), new JacksonJsonpMapper());
 
         // And create the API client
         ElasticsearchClient client = new ElasticsearchClient(transport);
@@ -94,22 +115,16 @@ public class IndexedSynonymParserTest {
         client.shutdown();
     }
 
-    @After
-    public void close() {
-        LOG.info("Closing ES container");
-        container.close();
-    }
-
-    @Test
-    /**
-     * Checks that the number of entries is correct in the synonym map when loading from an index
-     */
-    public void loadSynonyms() throws IOException, ParseException {
+    private void testAndClose(boolean auth, String user, String password, int expected)
+            throws Exception {
+        setup(auth);
         final StandardAnalyzer standardAnalyzer = new StandardAnalyzer();
         IndexedSynonymParser parser =
                 new IndexedSynonymParser(
                         container.getHost(),
                         container.getFirstMappedPort().intValue(),
+                        user,
+                        password,
                         INDEXNAME,
                         true,
                         true,
@@ -117,6 +132,32 @@ public class IndexedSynonymParserTest {
                         standardAnalyzer);
         parser.parse();
         SynonymMap synonyms = parser.build();
-        Assert.assertEquals(7, synonyms.words.size());
+        Assert.assertEquals(expected, synonyms.words.size());
+        LOG.info("Closing ES container");
+        container.close();
+    }
+
+    @Test
+    /**
+     * Checks that the number of entries is correct in the synonym map when loading from an index.
+     * Passing credentials even when authentication is not required
+     */
+    public void loadSynonymsNoAuth() throws Exception {
+        testAndClose(false, USERNAME, PASSWORD, 7);
+    }
+
+    @Test
+    /**
+     * Checks that the number of entries is correct in the synonym map when loading from an index.
+     * Passing credentials with authentication required
+     */
+    public void loadSynonymsAuth() throws Exception {
+        testAndClose(true, USERNAME, PASSWORD, 7);
+    }
+
+    @Test
+    /** Missing credentials with authentication required */
+    public void loadSynonymsMissingAuth() throws Exception {
+        testAndClose(true, null, null, 0);
     }
 }

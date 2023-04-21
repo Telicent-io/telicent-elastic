@@ -67,12 +67,14 @@ curl -XPUT "http://localhost:9200/my_index" -H 'Content-Type: application/json' 
           "type": "index_synonym_graph",
           "index": ".synonyms",
           "expand": true,
-          "lenient": false
+          "lenient": false, 
+          "username": "elastic",
+          "password": "$ELASTIC_PASSWORD"
         }
       }
     }
   }
-}'
+}' -u elastic:$ELASTIC_PASSWORD
 
 ```
 
@@ -84,7 +86,6 @@ The next step is to declare the index used to store the synonyms and populate it
 
 ```
 curl -XPUT "http://localhost:9200/.synonyms"
-
 
 curl -XPOST -H "Content-Type: application/json" "http://localhost:9200/.synonyms/_doc/synonyms" -d '{
   "synonyms": [
