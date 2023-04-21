@@ -9,6 +9,7 @@
 	<description>A plugin for ElasticSearch providing an index-backed synonym handler</description>
 	<properties>
 		<elasticsearch.version>8.6.2</elasticsearch.version>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<jdk.version>17</jdk.version>
 		<testcontainer.version>1.17.6</testcontainer.version>
 		<jackson.core.version>2.12.3</jackson.core.version>
@@ -20,6 +21,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.1</version>
 				<configuration>
 					<source>${jdk.version}</source>
 					<target>${jdk.version}</target>
@@ -93,7 +95,8 @@
 							<goal>install-hooks</goal>
 						</goals>
 					</execution>
-					<!-- On Maven verify phase, fail if any file (including unmodified) 
+					<!-- On Maven verify phase, fail if any file (including
+					unmodified) 
 						is badly formatted -->
 					<execution>
 						<id>validate-code-format</id>
