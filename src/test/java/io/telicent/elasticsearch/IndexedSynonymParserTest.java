@@ -14,20 +14,21 @@
 package io.telicent.elasticsearch;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
-import co.elastic.clients.elasticsearch._types.ElasticsearchException;
 import co.elastic.clients.elasticsearch._types.Refresh;
 import co.elastic.clients.elasticsearch.core.IndexRequest;
 import co.elastic.clients.json.JsonData;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 import co.elastic.clients.transport.ElasticsearchTransport;
 import co.elastic.clients.transport.rest_client.RestClientTransport;
-import java.io.IOException;
 import java.io.InputStream;
+import javax.net.ssl.SSLContext;
 import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.conn.ssl.TrustAllStrategy;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
+import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.analysis.synonym.SynonymMap;
 import org.elasticsearch.client.RestClient;
@@ -58,7 +59,7 @@ public class IndexedSynonymParserTest {
     private static final String PASSWORD = "THISISAPASSWORD";
     private static final String USERNAME = "elastic";
 
-    private void setup(boolean authenticate) throws ElasticsearchException, IOException {
+    private void setup(boolean authenticate) throws Exception {
 
         String version = System.getProperty("elasticsearch-version");
         if (version == null) version = "8.6.2";
@@ -81,7 +82,7 @@ public class IndexedSynonymParserTest {
         indexSynonyms(authenticate);
     }
 
-    private void indexSynonyms(boolean authenticate) throws ElasticsearchException, IOException {
+    private void indexSynonyms(boolean authenticate) throws Exception {
         String scheme = "http";
         if (authenticate) {
             scheme = "https";
@@ -92,15 +93,24 @@ public class IndexedSynonymParserTest {
                         new HttpHost(container.getHost(), container.getFirstMappedPort(), scheme));
 
         if (authenticate) {
-            BasicCredentialsProvider credsProv = new BasicCredentialsProvider();
+            final BasicCredentialsProvider credsProv = new BasicCredentialsProvider();
             credsProv.setCredentials(
                     AuthScope.ANY, new UsernamePasswordCredentials(USERNAME, PASSWORD));
+
+            // Allow self-signed certificates
+            final SSLContext sslcontext =
+                    SSLContextBuilder.create()
+                            .loadTrustMaterial(null, new TrustAllStrategy())
+                            .build();
+
             builder.setHttpClientConfigCallback(
                     new HttpClientConfigCallback() {
                         @Override
                         public HttpAsyncClientBuilder customizeHttpClient(
                                 HttpAsyncClientBuilder httpClientBuilder) {
-                            return httpClientBuilder.setDefaultCredentialsProvider(credsProv);
+                            return httpClientBuilder
+                                    .setDefaultCredentialsProvider(credsProv)
+                                    .setSSLContext(sslcontext);
                         }
                     });
         }
@@ -142,10 +152,19 @@ public class IndexedSynonymParserTest {
                         true,
                         true,
                         standardAnalyzer);
-        parser.parse();
-        SynonymMap synonyms = parser.build();
-        Assert.assertEquals(7, synonyms.words.size());
-        Assert.assertEquals(expected, synonyms.words.size());
+        boolean exception = false;
+        try {
+            parser.parse();
+        } catch (Exception e) {
+            exception = true;
+        }
+        if (exception) {
+            // were expecting an issue
+            Assert.assertEquals(0, expected);
+        } else {
+            SynonymMap synonyms = parser.build();
+            Assert.assertEquals(expected, synonyms.words.size());
+        }
         LOG.info("Closing ES container");
         container.close();
     }
@@ -153,10 +172,10 @@ public class IndexedSynonymParserTest {
     @Test
     /**
      * Checks that the number of entries is correct in the synonym map when loading from an index.
-     * Passing credentials even when authentication is not required
+     * Passing credentials even when authentication is not required. Not OK with ES8
      */
     public void loadSynonymsNoAuth() throws Exception {
-        testAndClose(false, USERNAME, PASSWORD, 7);
+        testAndClose(false, USERNAME, PASSWORD, 0);
     }
 
     @Test

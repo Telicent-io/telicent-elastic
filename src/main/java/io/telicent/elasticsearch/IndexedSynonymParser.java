@@ -24,15 +24,17 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.io.IOException;
 import java.io.StringReader;
-import java.text.ParseException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
+import javax.net.ssl.SSLContext;
 import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.conn.ssl.TrustAllStrategy;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
+import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.lucene.analysis.Analyzer;
@@ -110,7 +112,7 @@ public class IndexedSynonymParser extends SolrSynonymParser {
         }
     }
 
-    public void parse() throws IOException, ParseException {
+    public void parse() throws Exception {
         // create a one-off client
         final RestClientBuilder builder;
 
@@ -120,6 +122,12 @@ public class IndexedSynonymParser extends SolrSynonymParser {
             credsProv.setCredentials(
                     AuthScope.ANY, new UsernamePasswordCredentials(this.username, this.password));
 
+            // Allow self-signed certificates
+            final SSLContext sslcontext =
+                    SSLContextBuilder.create()
+                            .loadTrustMaterial(null, new TrustAllStrategy())
+                            .build();
+
             builder = RestClient.builder(new HttpHost(this.host, this.port, "https"));
 
             builder.setHttpClientConfigCallback(
@@ -127,7 +135,9 @@ public class IndexedSynonymParser extends SolrSynonymParser {
                         @Override
                         public HttpAsyncClientBuilder customizeHttpClient(
                                 HttpAsyncClientBuilder httpClientBuilder) {
-                            return httpClientBuilder.setDefaultCredentialsProvider(credsProv);
+                            return httpClientBuilder
+                                    .setDefaultCredentialsProvider(credsProv)
+                                    .setSSLContext(sslcontext);
                         }
                     });
         } else {

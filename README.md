@@ -53,7 +53,7 @@ This way the plugin will be preinstalled.
 First, you need to declare the analyzers when creating your index (assuming Elasticsearch is running locally on the default port and that the security is activated):
 
 ```
-curl -XPUT "https://localhost:9200/my_index" -H 'Content-Type: application/json' -d'
+curl --insecure -XPUT "https://localhost:9200/my_index" -H 'Content-Type: application/json' -d'
 {
   "settings": {
     "analysis": {
@@ -99,7 +99,7 @@ The parameters "username" and "password" allow to specify the credentials to use
 The next step is to index the synonyms.
 
 ```
-curl -XPOST -H "Content-Type: application/json" "https://localhost:9200/.synonyms/_doc/synonyms" -d '{
+curl --insecure -XPOST -H "Content-Type: application/json" "https://localhost:9200/.synonyms/_doc/synonyms" -d '{
   "synonyms": [
     "i-pod, i pod => ipod",
     "sea biscuit, sea biscit => seabiscuit",
@@ -120,13 +120,13 @@ The synonyms can be stored in any number of documents in the index, a query load
 Now that the synonym index has been populated, you can check that it is being applied. First, since the synonym data have been created *after* configuring the analysis for the search, the config must be reloaded with 
 
 ```
-curl -XPOST "https://localhost:9200/my_index/_reload_search_analyzers" -u elastic:This1sAPassw0rd
+curl --insecure -XPOST "https://localhost:9200/my_index/_reload_search_analyzers" -u elastic:This1sAPassw0rd
 ```
 
 You can then use the analyze endpoint to get a description of how a field will be analysed at search time, for instance
 
 ```
-curl -XPOST "https://localhost:9200/my_index/_analyze" -H 'Content-Type: application/json' -d'
+curl --insecure -XPOST "https://localhost:9200/my_index/_analyze" -H 'Content-Type: application/json' -d'
 { 
   "analyzer": "default_search", 
   "text": "Is this universe déja vu?"
