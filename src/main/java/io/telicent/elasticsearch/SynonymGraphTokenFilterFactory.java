@@ -44,7 +44,7 @@ public class SynonymGraphTokenFilterFactory extends AbstractTokenFilterFactory {
 
     protected final String indexName;
     protected final int port;
-    protected final String host;
+    protected final String host = "localhost";
 
     SynonymGraphTokenFilterFactory(
             IndexSettings indexSettings, Environment env, String name, Settings settings) {
@@ -64,7 +64,6 @@ public class SynonymGraphTokenFilterFactory extends AbstractTokenFilterFactory {
         this.password = settings.get("password");
 
         this.port = env.settings().getAsInt("http.port", 9200);
-        this.host = env.settings().get("network.host", "localhost");
     }
 
     @Override

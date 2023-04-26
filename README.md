@@ -8,12 +8,6 @@ Instead of storing the synonyms in a file, this implementation loads it from an 
 
 The main branch of this repository is for Elasticsearch 7.x, a separate branch is for 8.x.
 
-A Docker compose file in _src/test/resources_ helps create instances of Elasticsearch and Kibana with the plugin pre-installed. It relies on an environment variable _BUILD_DIRECTORY_ e.g. 
-
-```
-export BUILD_DIRECTORY=$PWD/target
-```
-
 This project is licensed under ASF license v2, see [LICENSE](LICENSE). All contributions are welcome and should be under ASF license v2, see [CONTRIBUTING](CONTRIBUTING.md) on how to proceed. 
 
 ### Issues/Questions
@@ -27,18 +21,36 @@ Compile the code with `mvn clean package`, you should find the plugin in _target
 You can then install it in Elasticsearch with
 
 ```
-$ES_HOME/bin/elasticsearch-plugin install file://target/releases/SynonymsPlugin-$ESVERSION.zip
+$ES_HOME/bin/elasticsearch-plugin install file://target/releases/SynonymsPlugin-$VERSION.zip
 ```
 
 When installing the plugin, you will see a message similar to this one:
 
-![Elastic installation message](https://user-images.githubusercontent.com/2104864/226297257-390d224a-dd1b-463a-a553-b77414315625.png)
+```
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@     WARNING: plugin requires additional permissions     @
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+* java.net.SocketPermission localhost connect,listen,accept,resolve
+See https://docs.oracle.com/javase/8/docs/technotes/guides/security/permissions.html
+for descriptions of what these permissions allow and the associated risks.
+```
 
 This is because the plugin code needs to query Elasticsearch and requires special permissions to do so. 
 
+## Docker
+
+If you are planning to use Elasticsearch with Docker, you should build a custom version of the image using the Dockerfile provided and use it instead
+
+```
+docker build --tag=elasticsearch-telicent-plugin:7.17.5 .
+``` 
+
+This way the plugin will be preinstalled.
+
+
 ## Getting Started
 
-First, you need to declare the analyzers when creating your index (assuming Elasticsearch is running locally on the default port and that the security is deactivated):
+First, you need to declare the analyzers when creating your index (assuming Elasticsearch is running locally on the default port and that the security is activated):
 
 ```
 curl -XPUT "http://localhost:9200/my_index" -H 'Content-Type: application/json' -d'
@@ -69,12 +81,12 @@ curl -XPUT "http://localhost:9200/my_index" -H 'Content-Type: application/json' 
           "expand": true,
           "lenient": false, 
           "username": "elastic",
-          "password": "$ELASTIC_PASSWORD"
+          "password": "This1sAPassw0rd"
         }
       }
     }
   }
-}' -u elastic:$ELASTIC_PASSWORD
+}' -u elastic:This1sAPassw0rd
 
 ```
 
@@ -82,11 +94,11 @@ The index synonym graph is used only during search and can't be applied during i
 The parameters _lenient_ and _expand_ are similar to those of synonym-graph-tokenfilter, their default values are indicated above.
 The parameter _index_ specifies where the plugin will load the synonym mappings from. The default value is _.synonyms_.
 
-The next step is to declare the index used to store the synonyms and populate it.
+The parameters "username" and "password" allow to specify the credentials to use for connecting to Elasticsearch. If the [security plugin is deactivated](https://www.elastic.co/guide/en/elasticsearch/reference/current/security-settings.html), remove these parameters.
+
+The next step is to index the synonyms.
 
 ```
-curl -XPUT "http://localhost:9200/.synonyms"
-
 curl -XPOST -H "Content-Type: application/json" "http://localhost:9200/.synonyms/_doc/synonyms" -d '{
   "synonyms": [
     "i-pod, i pod => ipod",
@@ -95,7 +107,7 @@ curl -XPOST -H "Content-Type: application/json" "http://localhost:9200/.synonyms
     "universe , cosmos",
     "lol, laughing out loud"
   ]
-}'
+}' -u elastic:This1sAPassw0rd
 
 ```
 
@@ -107,7 +119,9 @@ The synonyms can be stored in any number of documents in the index, a query load
 
 Now that the synonym index has been populated, you can check that it is being applied. First, since the synonym data have been created *after* configuring the analysis for the search, the config must be reloaded with 
 
-`curl -XPOST  "http://localhost:9200/my_index/_reload_search_analyzers"`
+```
+curl -XPOST "http://localhost:9200/my_index/_reload_search_analyzers" -u elastic:This1sAPassw0rd
+```
 
 You can then use the analyze endpoint to get a description of how a field will be analysed at search time, for instance
 
@@ -116,7 +130,7 @@ curl -XPOST "http://localhost:9200/my_index/_analyze" -H 'Content-Type: applicat
 { 
   "analyzer": "default_search", 
   "text": "Is this universe déja vu?"
-}'
+}' -u elastic:This1sAPassw0rd
 ```
 
 should return
