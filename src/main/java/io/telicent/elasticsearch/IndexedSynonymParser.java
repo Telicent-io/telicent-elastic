@@ -29,6 +29,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
 import org.apache.http.HttpHost;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.lucene.analysis.Analyzer;
@@ -37,6 +41,8 @@ import org.apache.lucene.util.CharsRef;
 import org.apache.lucene.util.CharsRefBuilder;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestClientBuilder;
+import org.elasticsearch.client.RestClientBuilder.HttpClientConfigCallback;
 
 /** Generates a synonym map from the content of an index * */
 public class IndexedSynonymParser extends SolrSynonymParser {
@@ -47,11 +53,16 @@ public class IndexedSynonymParser extends SolrSynonymParser {
     private final String host;
     private final int port;
 
+    private final String username;
+    private final String password;
+
     private static final Logger logger = LogManager.getLogger(IndexedSynonymParser.class);
 
     public IndexedSynonymParser(
             String host,
             int port,
+            String username,
+            String password,
             String index,
             boolean expand,
             boolean dedup,
@@ -62,6 +73,8 @@ public class IndexedSynonymParser extends SolrSynonymParser {
         this.index = index;
         this.host = host;
         this.port = port;
+        this.username = username;
+        this.password = password;
     }
 
     @Override
@@ -99,12 +112,31 @@ public class IndexedSynonymParser extends SolrSynonymParser {
 
     public void parse() throws IOException, ParseException {
         // create a one-off client
-        final RestClient restClient =
-                RestClient.builder(new HttpHost(this.host, this.port)).build();
+        final RestClientBuilder builder;
+
+        // needs a least a password
+        if (password != null && !password.isBlank()) {
+            BasicCredentialsProvider credsProv = new BasicCredentialsProvider();
+            credsProv.setCredentials(
+                    AuthScope.ANY, new UsernamePasswordCredentials(this.username, this.password));
+
+            builder = RestClient.builder(new HttpHost(this.host, this.port, "https"));
+
+            builder.setHttpClientConfigCallback(
+                    new HttpClientConfigCallback() {
+                        @Override
+                        public HttpAsyncClientBuilder customizeHttpClient(
+                                HttpAsyncClientBuilder httpClientBuilder) {
+                            return httpClientBuilder.setDefaultCredentialsProvider(credsProv);
+                        }
+                    });
+        } else {
+            builder = RestClient.builder(new HttpHost(this.host, this.port, "http"));
+        }
 
         // Create the transport with a Jackson mapper
         final ElasticsearchTransport transport =
-                new RestClientTransport(restClient, new JacksonJsonpMapper());
+                new RestClientTransport(builder.build(), new JacksonJsonpMapper());
 
         // And create the API client
         final ElasticsearchClient client = new ElasticsearchClient(transport);
