@@ -4,7 +4,7 @@
 
 This plugin provides an alternative implementation of the [SynonymGraphTokenFilter](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/analysis-synonym-graph-tokenfilter.html) for Elasticsearch.
 
-Instead of storing the synonyms in a file, this implementation loads it from an Elasticsearch index, which makes it easier to update especially when Elasticsearch runs in a sandboxed environment.
+Instead of storing the synonyms in a file, this implementation loads it from an Elasticsearch index, which makes it easier to update especially when Elasticsearch runs in a sandboxed environment or in a cluster as it saves you having to update the synonyms file on every node of the cluster.
 
 The main branch of this repository is for Elasticsearch 7.x, a separate branch is for 8.x.
 
