@@ -5,10 +5,10 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>io.telicent.elasticsearch</groupId>
 	<artifactId>SynonymsPlugin</artifactId>
-	<version>8.6.2.1</version>
+	<version>8.8.1.0</version>
 	<description>A plugin for ElasticSearch providing an index-backed synonym handler</description>
 	<properties>
-		<elasticsearch.version>8.6.2</elasticsearch.version>
+		<elasticsearch.version>8.8.1</elasticsearch.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<jdk.version>17</jdk.version>
 		<testcontainer.version>1.17.6</testcontainer.version>

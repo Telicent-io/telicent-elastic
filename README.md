@@ -42,7 +42,7 @@ This is because the plugin code needs to query Elasticsearch and requires specia
 If you are planning to use Elasticsearch with Docker, you should build a custom version of the image using the Dockerfile provided and use it instead
 
 ```
-docker build --tag=elasticsearch-telicent-plugin:8.6.2 .
+docker build --tag=elasticsearch-telicent-plugin:8.8.1.0 .
 ``` 
 
 This way the plugin will be preinstalled.
