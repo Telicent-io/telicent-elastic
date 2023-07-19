@@ -47,6 +47,11 @@ docker build --tag=elasticsearch-telicent-plugin:8.8.1.0 .
 
 This way the plugin will be preinstalled.
 
+Alternatively, you can use Telicent's Elasticsearch image
+
+```
+docker pull telicent/elasticsearch
+```
 
 ## Getting Started
 
