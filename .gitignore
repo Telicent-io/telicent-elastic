@@ -1,0 +1,32 @@
+# Maven and Build Artifacts
+target/
+lib/
+agents/
+*.versionsBackup
+pom.xml.*
+release.properties
+
+# IntelliJ
+!.idea/
+!.idea/runConfigurations
+.idea/*.xml
+.idea/.gitignore
+.idea/codeStyles
+.idea/*
+*.iml
+*.iws
+
+# Eclipse
+.classpath
+.project
+.settings/
+
+# VSCode
+.vscode/
+
+
+# OS X
+.DS_Store
+
+# testNG
+test-output/

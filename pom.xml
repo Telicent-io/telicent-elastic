@@ -12,10 +12,10 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<elasticsearch.version>7.17.5</elasticsearch.version>
 		<jdk.version>17</jdk.version>
-		<testcontainer.version>1.17.6</testcontainer.version>
-		<jackson.core.version>2.10.4</jackson.core.version>
-		<jackson.databind.version>2.10.4</jackson.databind.version>
-		<git-code-format-maven-plugin.version>4.2</git-code-format-maven-plugin.version>
+		<testcontainer.version>1.19.2</testcontainer.version>
+		<jackson.core.version>2.16.0</jackson.core.version>
+		<jackson.databind.version>2.16.0</jackson.databind.version>
+		<git-code-format-maven-plugin.version>4.3</git-code-format-maven-plugin.version>
 	</properties>
 	<build>
 		<plugins>
