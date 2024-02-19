@@ -57,8 +57,8 @@ public class IndexedSynonymParserTest {
 
     private void setup(boolean authenticate) throws ElasticsearchException, IOException {
 
-        String version = System.getProperty("elasticsearch-version");
-        if (version == null) version = "7.17.5";
+        String version = System.getProperty("elasticsearch.version");
+        if (version == null) version = "7.17.18";
         LOG.info("Starting docker instance of Elasticsearch {}...", version);
 
         container =
