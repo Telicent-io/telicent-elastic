@@ -10,7 +10,7 @@
 		handler</description>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<elasticsearch.version>7.17.5</elasticsearch.version>
+		<elasticsearch.version>7.17.14</elasticsearch.version>
 		<jdk.version>17</jdk.version>
 		<testcontainer.version>1.19.2</testcontainer.version>
 		<jackson.core.version>2.16.0</jackson.core.version>
