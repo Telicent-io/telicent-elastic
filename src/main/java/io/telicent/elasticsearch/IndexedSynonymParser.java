@@ -121,7 +121,6 @@ public class IndexedSynonymParser extends SolrSynonymParser {
             BasicCredentialsProvider credsProv = new BasicCredentialsProvider();
             credsProv.setCredentials(
                     AuthScope.ANY, new UsernamePasswordCredentials(this.username, this.password));
-
             // Allow self-signed certificates
             final SSLContext sslcontext =
                     SSLContextBuilder.create()
@@ -129,7 +128,6 @@ public class IndexedSynonymParser extends SolrSynonymParser {
                             .build();
 
             builder = RestClient.builder(new HttpHost(this.host, this.port, "https"));
-
             builder.setHttpClientConfigCallback(
                     new HttpClientConfigCallback() {
                         @Override

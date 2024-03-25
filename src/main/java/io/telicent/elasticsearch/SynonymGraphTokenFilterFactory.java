@@ -21,6 +21,7 @@ import org.apache.lucene.analysis.synonym.SynonymGraphFilter;
 import org.apache.lucene.analysis.synonym.SynonymMap;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.env.Environment;
+import org.elasticsearch.index.IndexService;
 import org.elasticsearch.index.IndexSettings;
 import org.elasticsearch.index.analysis.AbstractTokenFilterFactory;
 import org.elasticsearch.index.analysis.AnalysisMode;
@@ -52,7 +53,7 @@ public class SynonymGraphTokenFilterFactory extends AbstractTokenFilterFactory {
 
         this.expand = settings.getAsBoolean("expand", true);
         this.lenient = settings.getAsBoolean("lenient", false);
-        this.indexName = settings.get("index", ".synonyms");
+        this.indexName = settings.get("index", "synonyms-plugin");
 
         String val = settings.get("username");
         if (val == null || val.isBlank()) {
@@ -79,6 +80,7 @@ public class SynonymGraphTokenFilterFactory extends AbstractTokenFilterFactory {
 
     @Override
     public TokenFilterFactory getChainAwareTokenFilterFactory(
+            IndexService.IndexCreationContext context,
             TokenizerFactory tokenizer,
             List<CharFilterFactory> charFilters,
             List<TokenFilterFactory> previousTokenFilters,

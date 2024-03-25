@@ -54,7 +54,7 @@ public class IndexedSynonymParserTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(IndexedSynonymParserTest.class);
 
-    private static final String INDEXNAME = ".synonyms";
+    private static final String INDEXNAME = "synonyms-plugin";
 
     private static final String PASSWORD = "THISISAPASSWORD";
     private static final String USERNAME = "elastic";
@@ -62,8 +62,7 @@ public class IndexedSynonymParserTest {
     private void setup(boolean authenticate) throws Exception {
 
         String version = System.getProperty("elasticsearch-version");
-        if (version == null) version = "8.8.1";
-
+        if (version == null) version = "8.12.2";
         LOG.info("Starting docker instance of Elasticsearch {}...", version);
 
         container =
@@ -74,7 +73,6 @@ public class IndexedSynonymParserTest {
         } else {
             container.withEnv("xpack.security.enabled", "false");
         }
-
         container.start();
 
         LOG.info("Elasticsearch container started at {}", container.getHttpHostAddress());

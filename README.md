@@ -2,13 +2,18 @@
 
 ## Overview
 
-This plugin provides an alternative implementation of the [SynonymGraphTokenFilter](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/analysis-synonym-graph-tokenfilter.html) for Elasticsearch.
+This plugin provides an alternative implementation of the
+[SynonymGraphTokenFilter](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/analysis-synonym-graph-tokenfilter.html)
+for Elasticsearch.
 
-Instead of storing the synonyms in a file, this implementation loads it from an Elasticsearch index, which makes it easier to update especially when Elasticsearch runs in a sandboxed environment.
+Instead of storing the synonyms in a file, this implementation loads it from an Elasticsearch index, which makes it
+easier to update especially when Elasticsearch runs in a sandboxed environment or in a cluster as it saves you having to
+update the synonyms file on every node of the cluster.
 
 The main branch of this repository is for Elasticsearch 7.x, a separate branch is for 8.x.
 
-This project is licensed under ASF license v2, see [LICENSE](LICENSE). All contributions are welcome and should be under ASF license v2, see [CONTRIBUTING](CONTRIBUTING.md) on how to proceed. 
+This project is licensed under ASF license v2, see [LICENSE](LICENSE). All contributions are welcome and should be under
+ASF license v2, see [CONTRIBUTING](CONTRIBUTING.md) on how to proceed.
 
 ### Issues/Questions
 
@@ -35,14 +40,15 @@ See https://docs.oracle.com/javase/8/docs/technotes/guides/security/permissions.
 for descriptions of what these permissions allow and the associated risks.
 ```
 
-This is because the plugin code needs to query Elasticsearch and requires special permissions to do so. 
+This is because the plugin code needs to query Elasticsearch and requires special permissions to do so.
 
 ## Docker
 
-If you are planning to use Elasticsearch with Docker, you should build a custom version of the image using the Dockerfile provided and use it instead
+If you are planning to use Elasticsearch with Docker, you should build a custom version of the image using the
+Dockerfile provided and use it instead
 
 ```
-docker build --tag=elasticsearch-telicent-plugin:8.8.1.0 .
+docker build --tag=elasticsearch-telicent-plugin:7.17.14 .
 ``` 
 
 This way the plugin will be preinstalled.
@@ -51,11 +57,12 @@ Alternatively, you can use Telicent's Elasticsearch image
 
 ```
 docker pull telicent/elasticsearch
-```
+``` 
 
 ## Getting Started
 
-First, you need to declare the analyzers when creating your index (assuming Elasticsearch is running locally on the default port and that the security is activated):
+First, you need to declare the analyzers when creating your index (assuming Elasticsearch is running locally on the
+default port and that the security is activated):
 
 ```
 curl --insecure -XPUT "https://localhost:9200/my_index" -H 'Content-Type: application/json' -d'
@@ -95,11 +102,14 @@ curl --insecure -XPUT "https://localhost:9200/my_index" -H 'Content-Type: applic
 
 ```
 
-The index synonym graph is used only during search and can't be applied during indexing.
-The parameters _lenient_ and _expand_ are similar to those of synonym-graph-tokenfilter, their default values are indicated above.
-The parameter _index_ specifies where the plugin will load the synonym mappings from. The default value is _.synonyms_.
+The index synonym graph is used only during search and can't be applied during indexing. The parameters _lenient_ and
+_expand_ are similar to those of synonym-graph-tokenfilter, their default values are indicated above. The parameter
+_index_ specifies where the plugin will load the synonym mappings from. The default value is _.synonyms_.
 
-The parameters "username" and "password" allow to specify the credentials to use for connecting to Elasticsearch. If the [security plugin is deactivated](https://www.elastic.co/guide/en/elasticsearch/reference/current/security-settings.html), remove these parameters.
+The parameters "username" and "password" allow to specify the credentials to use for connecting to Elasticsearch. If the
+[security plugin is
+deactivated](https://www.elastic.co/guide/en/elasticsearch/reference/current/security-settings.html), remove these
+parameters.
 
 The next step is to index the synonyms.
 
@@ -116,13 +126,17 @@ curl --insecure -XPOST -H "Content-Type: application/json" "https://localhost:92
 
 ```
 
-The plugin supports only the [SOLR format](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/analysis-synonym-graph-tokenfilter.html#_solr_synonyms_2).
+The plugin supports only
+the [SOLR format](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/analysis-synonym-graph-tokenfilter.html#_solr_synonyms_2).
 
-The synonyms can be stored in any number of documents in the index, a query loads them all. The field names do not matter either. The values of the fields are either simple strings or arrays of strings. Each string corresponds to a line in the SOLR synonym format.
+The synonyms can be stored in any number of documents in the index, a query loads them all. The field names do not
+matter either. The values of the fields are either simple strings or arrays of strings. Each string corresponds to a
+line in the SOLR synonym format.
 
 ## Testing
 
-Now that the synonym index has been populated, you can check that it is being applied. First, since the synonym data have been created *after* configuring the analysis for the search, the config must be reloaded with 
+Now that the synonym index has been populated, you can check that it is being applied. First, since the synonym data
+have been created *after* configuring the analysis for the search, the config must be reloaded with
 
 ```
 curl --insecure -XPOST "https://localhost:9200/my_index/_reload_search_analyzers" -u elastic:This1sAPassw0rd
@@ -142,48 +156,48 @@ should return
 
 ```json
 {
-  "tokens" : [
+  "tokens": [
     {
-      "token" : "is",
-      "start_offset" : 0,
-      "end_offset" : 2,
-      "type" : "<ALPHANUM>",
-      "position" : 0
+      "token": "is",
+      "start_offset": 0,
+      "end_offset": 2,
+      "type": "<ALPHANUM>",
+      "position": 0
     },
     {
-      "token" : "this",
-      "start_offset" : 3,
-      "end_offset" : 7,
-      "type" : "<ALPHANUM>",
-      "position" : 1
+      "token": "this",
+      "start_offset": 3,
+      "end_offset": 7,
+      "type": "<ALPHANUM>",
+      "position": 1
     },
     {
-      "token" : "cosmos",
-      "start_offset" : 8,
-      "end_offset" : 16,
-      "type" : "SYNONYM",
-      "position" : 2
+      "token": "cosmos",
+      "start_offset": 8,
+      "end_offset": 16,
+      "type": "SYNONYM",
+      "position": 2
     },
     {
-      "token" : "universe",
-      "start_offset" : 8,
-      "end_offset" : 16,
-      "type" : "<ALPHANUM>",
-      "position" : 2
+      "token": "universe",
+      "start_offset": 8,
+      "end_offset": 16,
+      "type": "<ALPHANUM>",
+      "position": 2
     },
     {
-      "token" : "deja",
-      "start_offset" : 17,
-      "end_offset" : 21,
-      "type" : "<ALPHANUM>",
-      "position" : 3
+      "token": "deja",
+      "start_offset": 17,
+      "end_offset": 21,
+      "type": "<ALPHANUM>",
+      "position": 3
     },
     {
-      "token" : "vu",
-      "start_offset" : 22,
-      "end_offset" : 24,
-      "type" : "<ALPHANUM>",
-      "position" : 4
+      "token": "vu",
+      "start_offset": 22,
+      "end_offset": 24,
+      "type": "<ALPHANUM>",
+      "position": 4
     }
   ]
 }
@@ -191,10 +205,9 @@ should return
 
 as you can see, _universe_ has been expanded into _cosmos_ with the same offset.
 
-
 ### Note to developers
 
-Please format the code with 
+Please format the code with
 
 ```
 mvn git-code-format:format-code -Dgcf.globPattern=**/*
