@@ -18,6 +18,7 @@ import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.search.Hit;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 import co.elastic.clients.transport.ElasticsearchTransport;
+import co.elastic.clients.transport.instrumentation.NoopInstrumentation;
 import co.elastic.clients.transport.rest_client.RestClientTransport;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -144,7 +145,11 @@ public class IndexedSynonymParser extends SolrSynonymParser {
 
         // Create the transport with a Jackson mapper
         final ElasticsearchTransport transport =
-                new RestClientTransport(builder.build(), new JacksonJsonpMapper());
+                new RestClientTransport(
+                        builder.build(),
+                        new JacksonJsonpMapper(),
+                        null,
+                        NoopInstrumentation.INSTANCE);
 
         // And create the API client
         final ElasticsearchClient client = new ElasticsearchClient(transport);

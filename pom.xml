@@ -5,17 +5,17 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>io.telicent.elasticsearch</groupId>
     <artifactId>SynonymsPlugin</artifactId>
-    <version>8.12.2.0</version>
+    <version>8.12.2.1</version>
     <description>A plugin for ElasticSearch providing an index-backed synonym
         handler
     </description>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<elasticsearch.version>8.12.2</elasticsearch.version>
+	<elasticsearch.version>8.12.2</elasticsearch.version>
         <jdk.version>17</jdk.version>
         <testcontainer.version>1.19.2</testcontainer.version>
-        <jackson.core.version>2.16.1</jackson.core.version>
-        <jackson.databind.version>2.16.1</jackson.databind.version>
+        <jackson.core.version>2.17.0</jackson.core.version>
+        <jackson.databind.version>2.17.0</jackson.databind.version>
         <git-code-format-maven-plugin.version>4.3</git-code-format-maven-plugin.version>
     </properties>
     <build>
@@ -123,13 +123,11 @@
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-core</artifactId>
             <version>${jackson.core.version}</version>
-            <scope>provided</scope> <!-- Provided by Elasticsearch -->
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
             <version>${jackson.databind.version}</version>
-            <scope>compile</scope> <!-- Not provided by Elasticsearch -->
         </dependency>
         <dependency>
             <groupId>org.elasticsearch</groupId>

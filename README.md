@@ -48,7 +48,9 @@ If you are planning to use Elasticsearch with Docker, you should build a custom 
 Dockerfile provided and use it instead
 
 ```
-docker build --tag=elasticsearch-telicent-plugin:7.17.14 .
+docker build --build-arg ELASTICSEARCH_VERSION=8.12.2 \
+  --build-arg PLUGIN_VERSION=8.12.2.1 \
+  --tag=elasticsearch-telicent-plugin:8.12.2.1 .
 ``` 
 
 This way the plugin will be preinstalled.
@@ -56,7 +58,7 @@ This way the plugin will be preinstalled.
 Alternatively, you can use Telicent's Elasticsearch image
 
 ```
-docker pull telicent/elasticsearch
+docker pull telicent/elasticsearch:8.12.2.1
 ``` 
 
 ## Getting Started
